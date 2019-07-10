@@ -14,20 +14,20 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 Today I am going to learn how to make a package.
 
 This package will:
-- read in at process the features
-- get the features in a flexible way
-- have a function to label models as correct/incorrect
-- plot the ROC and ROC-like curves we use, flexibly
-- have some kind of test
+
+* read in at process the features
+* get the features in a flexible way
+* have a function to label models as correct/incorrect
+* plot the ROC and ROC-like curves we use, flexibly
+* have some kind of test
 
 ### Resources
-- [R Packages](http://r-pkgs.had.co.nz/intro.html), Hadley Wickham 
-- [Writing an R package from scratch](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/), Hilary Parker
+* [R Packages](http://r-pkgs.had.co.nz/intro.html), Hadley Wickham 
 
 ### Dependencies
-- devtools
-- roxygen2
-- testthat
+* devtools
+* roxygen2
+* testthat
 
 ```{r, eval=FALSE}
 install.packages(c("devtools", "roxygen2", "testthat"))
@@ -41,33 +41,29 @@ library(testthat)
 ```
 
 ### Elements of a package
-[ ] R code: R/ directory where the code lives 
-[ ] Package metadata: DESCRIPTION describes the package, license and contact information
-[ ] Documentation: documentation to describe each function; created using roxygen2
-[ ] Vignettes: long-form documents that show how to combine parts of the package to solve real problems; created using R markdown
-[ ] Tests: unit tests that define correct behaviour and alert you when functions break; uses testthat
-[ ] Namespace: NAMESPACE file defines functions made available to other packages and requirements from other packages; created using roxygen2
-[ ] External data: data/ directory (e.g. examples)
-[ ] Compiled code: src/ directory to include compiled C/C++ code
-[ ] Other components: including demo/ exec/ po/ and tools/
-[ ] Git and github (via Rstudio)
-[ ] Automated checking
-[ ] Release
+* [ ] R code: R/ directory where the code lives 
+* [x] Package metadata: DESCRIPTION describes the package, license and contact information
+* [ ] Documentation: documentation to describe each function; created using roxygen2
+* [ ] Vignettes: long-form documents that show how to combine parts of the package to solve real problems; created using R markdown
+* [ ] Tests: unit tests that define correct behaviour and alert you when functions break; uses testthat
+* [ ] Namespace: NAMESPACE file defines functions made available to other packages and requirements from other packages; created using roxygen2
+* [ ] External data: data/ directory (e.g. examples)
+* [ ] Compiled code: src/ directory to include compiled C/C++ code
+* [ ] Other components: including demo/ exec/ po/ and tools/
+* [ ] Git and github (via Rstudio)
+* [ ] Automated checking
+* [ ] Release
 
-
-### R code:
 
 #### Create the package
 
 I found that lots of the devtools functions mentioned in the R Packages book are now part of the usethis package since a [big update to devtools](https://www.tidyverse.org/articles/2018/10/devtools-2-0-0/)
 
 ```{r}
-#devtools::create("~/clareR/RFQAmodelr")
-# library(usethis)  # this is loaded with devtools
 usethis::create_package("~/clareR/RFQAmodelr")
 ```
 
-This will create RFQAmodelr, an R/ directory, DESCRIPTION and NAMESPACE file.
+This will create RFQAmodelr, DESCRIPTION and NAMESPACE file.
 
 DESCRIPTION FILE:
 
@@ -104,9 +100,36 @@ Other useful things:
 options(usethis.full_name = "Clare E. West")
 usethis::use_mit_license()
 
+use_readme_md()
+#> Writing 'README.md'
+#> Modify 'README.md'
 ```
 
-Create the R/ directory. 
+### R code:
+
+Create an `.R` file and R/ directory (if it does not already exist)
+
+```{r}
+use_r("hello")
+#>Creating 'R/'
+#> Modify 'R/hello.R'
+
+## Add a function into hello.R
+say_hello <- function(name="stranger"){
+  print(paste("Hello, ", name, "!", sep=""))
+}
+
+## Load the package
+devtools::load_all()
+#>Loading RFQAmodelr
+
+RFQAmodelr::say_hello()
+#> [1] "Hello, stranger!"
+
+RFQAmodelr::say_hello("Clare")
+#> [1] "Hello, Clare!"
+
+```
 
 It's not possible to have subdirectories, so if files need to be grouped use a common prefix: `prefix-*.R`
 
@@ -124,25 +147,82 @@ To display a message when the package loads, use `.onAttach()`
 }
 ```
 
-Useful set up code;
+
+### Object documentation
+
+Object documentation is accessed by `?` or `help()` and stored in `.Rd` files in the `man/` directory. The syntax is loosely based on LaTeX.
+
+roxygen2 turns formatted comments into `.Rd` documentation files . roxygen comments start with `#'`
+
+Documentation workflow:
+
+* add roxygen comments to the `.R` files
+* Run `devtools::document()` (or Cmd + shift + D in RStudio) to convert roxygen comments to `.Rd` files
+* Preview documentation with `?`
+* Repeat
+
+
 
 ```{r}
-.onLoad <- function(libname, pkgname) {
-  op <- options()
-  op.devtools <- list(
-    devtools.path = "~/R-dev",
-    devtools.install.args = "",
-    devtools.name = "Your name goes here",
-    devtools.desc.author = "First Last <first.last@example.com> [aut, cre]",
-    devtools.desc.license = "What license is it under?",
-    devtools.desc.suggests = NULL,
-    devtools.desc = list()
-  )
-  toset <- !(names(op.devtools) %in% names(op))
-  if(any(toset)) options(op.devtools[toset])
-
-  invisible()
+#' Say hello
+#'
+#' Receive a greeting from RFQAmodelr
+#'
+#' @param name string. Your name
+#' @return Returns a greeting, personalised using \code{name} if provided.
+#' @examples
+#' say_hello()
+#' say_hello("Clare")
+say_hello <- function(name="stranger"){
+  message = paste("Hello, ", name, "!", sep="")
+  return(message)
 }
+
 ```
+
+Components: 
+
+* The first sentence is the title of the documentation (use sentence case, but don't use a full stop)
+* The second paragraph is the description and should briefly describe what the function does
+* The optional third and further paragraphs are included in the details, shown after the argument description. 
+* Blocks are broken up into tags: `@tag details`
+* Most functions will have the tags `@param`, `@examples`, `@return`
+* Examples must run without errors as they are run automatically, but `\dontrun{}` will prevent this (e.g. to demonstrate code that causes an error). They can be stored in separate files and use `@example path/relative/to/package/root`
+* Arbitrary sections can be used: `@section My Section:`
+* Params can be inherited from other function documentation using `@inheritParams source_function`
+
+### Vignettes
+
+A vignette is a guide to using the package, and each package may have multiple vignettes. They can be made using the R markdown vignette engine provided by knitr. 
+
+```{r}
+usethis::use_vignette("RFQAmodelr-guide")
+#> Adding 'knitr' to Suggests field in DESCRIPTION
+#> Setting VignetteBuilder field in DESCRIPTION to 'knitr'
+#> Adding 'inst/doc' to '.gitignore'
+#> Creating 'vignettes/'
+#> Adding '*.html', '*.R' to 'vignettes/.gitignore'
+#> Adding 'rmarkdown' to Suggests field in DESCRIPTION
+#> Writing 'vignettes/RFQAmodelr-guide.Rmd'
+#> Modify 'vignettes/RFQAmodelr-guide.Rmd'
+```
+
+This generates the template for a vingette, which uses R markdown. 
+
+
+### Testing
+
+Implement formal automated (AKA unit) testing using the testthat package, rather than informal testing through the command line. 
+
+```{r}
+usethis::use_testthat()
+#> Adding 'testthat' to Suggests field in DESCRIPTION
+#> Creating 'tests/testthat/'
+#> ✔ Writing 'tests/testthat.R'
+#> Call `use_test()` to initialize a basic test file and open it for editing.
+```
+
+
+
 
 

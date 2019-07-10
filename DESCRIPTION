@@ -1,5 +1,5 @@
 Package: RFQAmodelr
-Title: What the Package Does (One Line, Title Case)
+Title: Random Forest Quality Assessment 
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Clare E.",
@@ -7,13 +7,20 @@ Authors@R:
            role = c("aut", "cre"),
            email = "clare.west@stats.ox.ac.uk",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Develop and use random forest classifiers to classify models
+            from protein structure prediction pipelines as correct or incorrect
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    caret
+    caret,
     dplyr,
     ggplot2,
     randomForest,
     ROCR
+RoxygenNote: 6.1.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
