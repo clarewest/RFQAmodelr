@@ -1,0 +1,148 @@
+---
+title: "RFQAmodel Package Development"
+author: "Clare E. West"
+date: "09/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+### RFQAmodel package
+
+Today I am going to learn how to make a package.
+
+This package will:
+- read in at process the features
+- get the features in a flexible way
+- have a function to label models as correct/incorrect
+- plot the ROC and ROC-like curves we use, flexibly
+- have some kind of test
+
+### Resources
+- [R Packages](http://r-pkgs.had.co.nz/intro.html), Hadley Wickham 
+- [Writing an R package from scratch](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/), Hilary Parker
+
+### Dependencies
+- devtools
+- roxygen2
+- testthat
+
+```{r, eval=FALSE}
+install.packages(c("devtools", "roxygen2", "testthat"))
+devtools::install_github("r-lib/devtools")
+```
+
+```{r}
+library(devtools)
+library(roxygen2)
+library(testthat)
+```
+
+### Elements of a package
+[ ] R code: R/ directory where the code lives 
+[ ] Package metadata: DESCRIPTION describes the package, license and contact information
+[ ] Documentation: documentation to describe each function; created using roxygen2
+[ ] Vignettes: long-form documents that show how to combine parts of the package to solve real problems; created using R markdown
+[ ] Tests: unit tests that define correct behaviour and alert you when functions break; uses testthat
+[ ] Namespace: NAMESPACE file defines functions made available to other packages and requirements from other packages; created using roxygen2
+[ ] External data: data/ directory (e.g. examples)
+[ ] Compiled code: src/ directory to include compiled C/C++ code
+[ ] Other components: including demo/ exec/ po/ and tools/
+[ ] Git and github (via Rstudio)
+[ ] Automated checking
+[ ] Release
+
+
+### R code:
+
+#### Create the package
+
+I found that lots of the devtools functions mentioned in the R Packages book are now part of the usethis package since a [big update to devtools](https://www.tidyverse.org/articles/2018/10/devtools-2-0-0/)
+
+```{r}
+#devtools::create("~/clareR/RFQAmodelr")
+# library(usethis)  # this is loaded with devtools
+usethis::create_package("~/clareR/RFQAmodelr")
+```
+
+This will create RFQAmodelr, an R/ directory, DESCRIPTION and NAMESPACE file.
+
+DESCRIPTION FILE:
+
+```
+Package: RFQAmodelr
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "First",
+           family = "Last",
+           role = c("aut", "cre"),
+           email = "first.last@example.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+```
+
+DESCRIPTION file can be edited manually or via more usethis functions.
+
+For example, to add required packages:
+
+```{r}
+usethis::use_package("dplyr")
+#> Setting active project to '/homes/west/clareR/RFQAmodelr'
+#> Adding 'dplyr' to Imports field in DESCRIPTION
+#> Refer to functions with `dplyr::fun()`
+
+```
+Other useful things:
+
+```{r}
+options(usethis.full_name = "Clare E. West")
+usethis::use_mit_license()
+
+```
+
+Create the R/ directory. 
+
+It's not possible to have subdirectories, so if files need to be grouped use a common prefix: `prefix-*.R`
+
+Packages are loaded in two steps: when it is built (e.g. by CRAN) all the code in R/ is executed and the results are saved; when it is loaded (library() or require()), the cached results are made available. 
+
+Don't run code at the top-level of a package, only create objects (mostly functions)
+
+Be careful using functions that depend on global options (which may differ by user) e.g. read.csv() uses the option stringsAsFactors
+
+To display a message when the package loads, use `.onAttach()`
+
+```{r, eval=FALSE}
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("Welcome to my package")
+}
+```
+
+Useful set up code;
+
+```{r}
+.onLoad <- function(libname, pkgname) {
+  op <- options()
+  op.devtools <- list(
+    devtools.path = "~/R-dev",
+    devtools.install.args = "",
+    devtools.name = "Your name goes here",
+    devtools.desc.author = "First Last <first.last@example.com> [aut, cre]",
+    devtools.desc.license = "What license is it under?",
+    devtools.desc.suggests = NULL,
+    devtools.desc = list()
+  )
+  toset <- !(names(op.devtools) %in% names(op))
+  if(any(toset)) options(op.devtools[toset])
+
+  invisible()
+}
+```
+
+
