@@ -1,0 +1,2 @@
+Set         Target  Length  Beff   SCOP_Class  NumCon  TargetPPV  Resolution
+Training    5EXP_A  168  16991  c  73   0.3288  1.8
