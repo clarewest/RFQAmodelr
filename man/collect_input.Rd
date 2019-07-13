@@ -4,8 +4,17 @@
 \alias{collect_input}
 \title{Collect input files}
 \usage{
-collect_input()
+collect_input(directory = ".", detailsfile = "target_details.txt")
+}
+\arguments{
+\item{directory}{string. The directory containing files (default: working)}
+
+\item{detailsfile}{string. The file containing details about the targets
+(default: "target_details.txt")}
+}
+\value{
+Returns a dataframe containing the raw data for the targets.
 }
 \description{
-Collect the raw feature information from files in the working directory
+Collect the raw feature information from files
 }

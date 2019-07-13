@@ -2,9 +2,9 @@
 % Please edit documentation in R/handle-files.R
 \name{gather_files}
 \alias{gather_files}
-\title{#' Gather files}
+\title{Gather files}
 \usage{
-gather_files(extension, colnames)
+gather_files(extension, colnames, directory = ".")
 }
 \arguments{
 \item{extension}{string. File extension}

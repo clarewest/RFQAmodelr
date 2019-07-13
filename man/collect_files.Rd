@@ -4,7 +4,7 @@
 \alias{collect_files}
 \title{Collect files}
 \usage{
-collect_files()
+collect_files(directory = ".")
 }
 \description{
 Read in all the specified files containing raw feature information

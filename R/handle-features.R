@@ -1,4 +1,37 @@
-## Choose the features that have ensemble features
+#' Get ensemble features
+#'
+#' Calculate the max, minimum, median and spread for a given score
+#'
+#' @param df dataframe. The features dataset to calculate from and append to
+#' @param colname string. The name of the column corresponding to the feature
+#' for which ensemble features will be calculated
+#' @param prefix string. The prefix used when naming the ensemble feature
+#' columns (defaults to the name of the column)
+#' @param rev boolean. Flag to indicate that smaller scores are better
+#' for this feature
+#' @return Returns a dataframe that includes the new ensemble features
+#' @examples
+#' get_ensemble(features, "ProQ2D") %>%
+#' get_ensemble(., "SAINT2", "S2", rev=TRUE)
+get_ensemble <-function(df, colname, prefix=colname, rev=FALSE){
+  ## for these scores lower values are better
+  if (rev){
+    ensemble <- df %>%
+      group_by(Target, Set) %>%
+      summarise_at(vars(colname), list(Med=median,Max=min, Min=max)) %>%
+      mutate(!!paste0(prefix,"_Spr") := Max-Med) %>%
+      rename_at(vars(Med, Max, Min), function(x) paste0(prefix,"_",x))
+  }else{
+    ## for these scores highest values are better
+    ensemble <- df %>%
+      group_by(Target, Set) %>%
+      summarise_at(vars(colname), list(Med=median,Max=max, Min=min)) %>%
+      mutate(!!paste0(prefix,"_Spr") := Max-Med) %>%
+      rename_at(vars(Med, Max, Min), function(x) paste0(prefix,"_",x))
+  }
+  return(df %>% inner_join(ensemble, by=c("Target","Set")))
+}
+
 #' Get the features
 #'
 #' Get the features from the input data
