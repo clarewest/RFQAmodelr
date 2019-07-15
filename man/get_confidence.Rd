@@ -4,11 +4,11 @@
 \alias{get_confidence}
 \title{Get confidence categories}
 \usage{
-get_confidence(results, score = RFQAmodel, confidence_cutoffs = c(0.5,
-  0.3, 0.1))
+get_confidence(results, predictor = RFQAmodel,
+  confidence_cutoffs = c(0.5, 0.3, 0.1))
 }
 \arguments{
-\item{score}{string. Name of the column to use as the score}
+\item{predictor}{string. Name of the column to use as the score}
 
 \item{confidence_cutoffs}{vector. Optional custom confidence cutoffs}
 }
