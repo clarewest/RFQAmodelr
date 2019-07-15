@@ -18,7 +18,8 @@ Imports:
     ggplot2,
     randomForest,
     ROCR,
-    stringr
+    stringr,
+    rlang
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,
