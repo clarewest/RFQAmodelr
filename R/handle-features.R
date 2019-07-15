@@ -13,18 +13,21 @@
 #' @examples
 #' get_ensemble(features, "ProQ2D") %>%
 #' get_ensemble(., "SAINT2", "S2", rev=TRUE)
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr mutate summarise summarise_at rename_at
+#' @export
 get_ensemble <-function(df, colname, prefix=colname, rev=FALSE){
   ## for these scores lower values are better
   if (rev){
     ensemble <- df %>%
-      group_by(Target, Set) %>%
+      group_by(.data$Target, .data$Set) %>%
       summarise_at(vars(colname), list(Med=median,Max=min, Min=max)) %>%
       mutate(!!paste0(prefix,"_Spr") := Max-Med) %>%
       rename_at(vars(Med, Max, Min), function(x) paste0(prefix,"_",x))
   }else{
     ## for these scores highest values are better
     ensemble <- df %>%
-      group_by(Target, Set) %>%
+      group_by(.data$Target, .data$Set) %>%
       summarise_at(vars(colname), list(Med=median,Max=max, Min=min)) %>%
       mutate(!!paste0(prefix,"_Spr") := Max-Med) %>%
       rename_at(vars(Med, Max, Min), function(x) paste0(prefix,"_",x))
@@ -39,46 +42,71 @@ get_ensemble <-function(df, colname, prefix=colname, rev=FALSE){
 #' @param df dataframe. Data frame containing the raw input data
 #' @param noglobal boolean. Indicate whether to leave out global features
 #' @return Returns a dataframe containing the features for RFQAmodel
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr select group_by mutate
+#' @importFrom rlang .data
+#' @export
 get_features <- function(df, noglobal=FALSE){
   if (! noglobal){
     df2 <- df %>%
-      select(-SCOP_Class) %>%
-      group_by(Target, Set) %>%
-      get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
-      get_ensemble(., "Contact", "Con", rev=TRUE) %>%
-      get_ensemble(., "PCons", "PC") %>%
-      get_ensemble(., "ProQ2D") %>%
-      get_ensemble(., "ProQRosCenD","RosCen") %>%
-      get_ensemble(., "ProQRosFAD","RosFA") %>%
-      get_ensemble(., "ProQ3D") %>%
-      get_ensemble(., "PCombC") %>%
-      get_ensemble(., "EigenTHREADER","ET") %>%
-      mutate(PPV_Max=max(PPV), PPV_Num=(PPV*NumCon)) %>%
-      get_ensemble(., "globalfRMSD") %>%
-      get_ensemble(., "localfRMSD") %>%
-      get_ensemble(., "sPCons") %>%
-      get_ensemble(., "sProQ3D")
+      select(-.data$SCOP_Class) %>%
+      group_by(.data$Target, .data$Set) %>%
+      RFQAmodelr::get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
+      RFQAmodelr::get_ensemble(., "Contact", "Con", rev=TRUE) %>%
+      RFQAmodelr::get_ensemble(., "PCons", "PC") %>%
+      RFQAmodelr::get_ensemble(., "ProQ2D") %>%
+      RFQAmodelr::get_ensemble(., "ProQRosCenD","RosCen") %>%
+      RFQAmodelr::get_ensemble(., "ProQRosFAD","RosFA") %>%
+      RFQAmodelr::get_ensemble(., "ProQ3D") %>%
+      RFQAmodelr::get_ensemble(., "PCombC") %>%
+      RFQAmodelr::get_ensemble(., "EigenTHREADER","ET") %>%
+      mutate(PPV_Max = max(PPV),
+             PPV_Num = (PPV * NumCon)) %>%
+      RFQAmodelr::get_ensemble(., "globalfRMSD") %>%
+      RFQAmodelr::get_ensemble(., "localfRMSD") %>%
+      RFQAmodelr::get_ensemble(., "sPCons") %>%
+      RFQAmodelr::get_ensemble(., "sProQ3D")
   }
   else{
     df2 <- df %>%
-      select(-SCOP_Class) %>%
-      select(-PCons, -ProQ2D, -ProQRosCenD, -ProQRosFAD, -ProQ3D, -PCombC) %>%
+      select(-.data$SCOP_Class) %>%
+      select(-.data$PCons,
+             -.data$ProQ2D,
+             -.data$ProQRosCenD,
+             -.data$ProQRosFAD,
+             -.data$ProQ3D,
+             -.data$PCombC) %>%
       group_by(Target, Set) %>%
-      mutate(sPCombC = ((0.3*sPCons) + (0.6*sProQ3D) + PPV)/1.9) %>%
-      get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
-      get_ensemble(., "Contact", "Con", rev=TRUE) %>%
-      #         get_ensemble(., "PCons", "PC") %>%
-      #          get_ensemble(., "ProQ2D") %>%
-      #          get_ensemble(., "ProQRosCenD","RosCen") %>%
-      #          get_ensemble(., "ProQRosFAD","RosFA") %>%
-      #          get_ensemble(., "ProQ3D") %>%
-      get_ensemble(., "sPCombC") %>%
-      get_ensemble(., "EigenTHREADER","ET") %>%
+      mutate(sPCombC = ((0.3*.data$sPCons) + (0.6*.data$sProQ3D) + .data$PPV)/1.9) %>%
+      RFQAmodelr::get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
+      RFQAmodelr::get_ensemble(., "Contact", "Con", rev=TRUE) %>%
+      #         RFQAmodelr::get_ensemble(., "PCons", "PC") %>%
+      #          RFQAmodelr::get_ensemble(., "ProQ2D") %>%
+      #          RFQAmodelr::get_ensemble(., "ProQRosCenD","RosCen") %>%
+      #          RFQAmodelr::get_ensemble(., "ProQRosFAD","RosFA") %>%
+      #          RFQAmodelr::get_ensemble(., "ProQ3D") %>%
+      RFQAmodelr::get_ensemble(., "sPCombC") %>%
+      RFQAmodelr::get_ensemble(., "EigenTHREADER","ET") %>%
       mutate(PPV_Max=max(PPV), PPV_Num=(PPV*NumCon)) %>%
-      get_ensemble(., "globalfRMSD") %>%
-      get_ensemble(., "localfRMSD") %>%
-      get_ensemble(., "sPCons") %>%
-      get_ensemble(., "sProQ3D")
+      RFQAmodelr::get_ensemble(., "globalfRMSD") %>%
+      RFQAmodelr::get_ensemble(., "localfRMSD") %>%
+      RFQAmodelr::get_ensemble(., "sPCons") %>%
+      RFQAmodelr::get_ensemble(., "sProQ3D")
   }
   return(df2)
+}
+
+#' Get labels
+#'
+#' Label individual models as correct or incorrect
+#'
+#' @param truth vector. Model quality compared to native (e.g. TMScore) for all
+#' models
+#' @param cutoff float. The cutoff that defines a correct model (default 0.5)
+#' @return Returns a vector of the length of the number of models, with 1 or 0
+#' indicating correct or incorrect
+#' @export
+get_labels <- function(truth = TMScore, cutoff=0.5){
+  labels <- ifelse( {{truth}} <=2.5, 1,0 )
+  return(labels)
 }

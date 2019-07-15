@@ -15,6 +15,10 @@
 #' @examples
 #' results <- classify_models(validation_tab, RFQAmodel, "RFQAmodel", confidence = TRUE)
 #' results2 <- classify_models(results, RFQAmodel_local, "RFQAmodel_local")
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr ungroup mutate
+#' @importFrom rlang .data
+#' @export
 classify_models <- function(features, classifier, name="RFQAmodel", confidence = FALSE){
   results <- features %>% ungroup() %>% mutate({{name}} := as.numeric(predict(classifier, features, type = "prob")[,2]))
   if (confidence){
@@ -30,10 +34,14 @@ classify_models <- function(features, classifier, name="RFQAmodel", confidence =
 #'
 #' @param predictor string. Name of the column to use as the score
 #' @param confidence_cutoffs vector. Optional custom confidence cutoffs
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr mutate
+#' @importFrom rlang .data
+#' @export
 get_confidence <- function(results, predictor = RFQAmodel, confidence_cutoffs = c(0.5, 0.3, 0.1)){
   results_confidence <- results %>%
-    group_by(Target) %>%
-    mutate(Confidence := ifelse(max({{predictor}}) > confidence_cutoffs[1] , "High",
+    group_by(.data$Target) %>%
+    mutate(.data$Confidence := ifelse(max({{predictor}}) > confidence_cutoffs[1] , "High",
                                ifelse(max({{predictor}}) > confidence_cutoffs[2], "Medium",
                                       ifelse(max({{predictor}}) > confidence_cutoffs[3], "Low","Failed"))))
   return(results_confidence)
@@ -48,23 +56,27 @@ get_confidence <- function(results, predictor = RFQAmodel, confidence_cutoffs = 
 #'@param truth string. Column to use as the truth (default TMScore)
 #'@param cutoff float. Cutoff that defines a correct model (default 0.5)
 #'@param rev boolean. True if lower values are better for the truth (e.g. RMSD) (default FALSE)
+#'@importFrom magrittr "%>%"
+#'@importFrom dplyr mutate bind_rows filter group_by arrange slice summarise
+#' @importFrom rlang .data
+#'@export
 get_stats <- function(results, predictor = RFQAmodel, truth = TMScore, cutoff = 0.5, rev = FALSE){
   if (rev){
-    results <- results %>% mutate(truth = -truth)
+    results <- results %>% mutate(truth = -.data$truth)
   }
   stats <- results %>%
     bind_rows((results %>% mutate(Confidence = "All")),
-              (results %>% filter(Confidence %in% c("High","Medium")) %>% mutate(Confidence = "High.and.Medium")),
-              results %>% filter(Confidence != "Failed") %>% mutate(Confidence = "Predicted.Modelling.Success")) %>%
-    group_by(Confidence, Target) %>%
+              (results %>% filter(.data$Confidence %in% c("High","Medium")) %>% mutate(Confidence = "High.and.Medium")),
+              results %>% filter(.data$Confidence != "Failed") %>% mutate(Confidence = "Predicted.Modelling.Success")) %>%
+    group_by(.data$Confidence, .data$Target) %>%
      mutate(Best := max({{truth}}) >= cutoff) %>%
      arrange( - {{predictor}} ) %>%
      slice(1:5) %>%
      mutate(Top5 = max( {{truth}} >= cutoff)) %>%
      slice(1) %>%
-     summarise(Top5 = Top5, Top1=sum( {{truth}} >= cutoff), Max = sum(Best)) %>%
-     summarise(Top5 = sum(Top5), Top1=sum(Top1), Max = sum(Max), Total = length(Confidence)) %>%
-     mutate(Precision.Top5 = Top5/Total, Precision.Top1 = Top1/Total)
+     summarise(Top5 = .data$Top5, Top1=sum( {{truth}} >= cutoff), Max = sum(.data$Best)) %>%
+     summarise(Top5 = sum(.data$Top5), Top1=sum(.data$Top1), Max = sum(.data$Max), Total = length(.data$Confidence)) %>%
+     mutate(Precision.Top5 = .data$Top5/.data$Total, Precision.Top1 = .data$Top1/.data$Total)
   return(stats)
 }
 
