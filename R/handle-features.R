@@ -106,7 +106,11 @@ get_features <- function(df, noglobal=FALSE){
 #' @return Returns a vector of the length of the number of models, with 1 or 0
 #' indicating correct or incorrect
 #' @export
-get_labels <- function(truth = TMScore, cutoff=0.5){
-  labels <- ifelse( {{truth}} <=2.5, 1,0 )
+get_labels <- function(truth = TMScore, cutoff=0.5, rev=FALSE){
+  # to be labelled as correct, the truth for a model should be
+  # greater than the cutoff (i.e. TMScore)
+  # unless the rev flag is TRUE, in which case it should be
+  # smaller than the cutoff (i.e. RMSD)
+  labels <- ifelse( (-1)^(1)*truth >= (-1)^(1)*cutoff , 1, 0 )
   return(labels)
 }

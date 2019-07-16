@@ -37,10 +37,10 @@ calculate_performance <- function(score,labels,plot_index,plot.colours,add_to_pl
 #' @importFrom magrittr "%>%"
 #' @importFrom dplyr mutate select group_by slice ungroup summarise pull
 #' @export
-plot_roc <- function(resultsdf, featurelist, topmodel = FALSE, addhighconf = FALSE, truth = TMScore, cutoff = 0.5) {
+plot_roc <- function(resultsdf, featurelist, topmodel = FALSE, addhighconf = FALSE, truth = TMScore, cutoff = 0.5, rev=TRUE, relabel=TRUE) {
   ## Make the label column if it doesn't already exist
-  if (!"Label" %in% names(resultsdf)) {
-    resultsdf <- resultsdf %>% mutate(Label = RFQAmodelr::get_labels({{TMScore}}, cutoff))
+  if ((!"Label" %in% names(resultsdf)) || relabel) {
+    resultsdf <- resultsdf %>% mutate(Label = RFQAmodelr::get_labels(!!as.name(truth), cutoff, rev))
   }
   roc.results <- list(length(featurelist))
   if (topmodel){
@@ -53,9 +53,9 @@ plot_roc <- function(resultsdf, featurelist, topmodel = FALSE, addhighconf = FAL
   else{
     roc_scores <- resultsdf %>%
       mutate(SAINT2=-SAINT2, EigenTHREADER=EigenTHREADER/ET_Max) %>%
-      select(Target, Decoy, TMScore, Label, featurelist) %>%
+      select(Target, Decoy, TMScore, Label, featurelist, {{truth}}) %>%
       group_by(Target) %>%
-      tidyr::gather(key="Score", value="value", -c("Target","Decoy", "TMScore", "Label"))
+      tidyr::gather(key="Score", value="value", -c("Target","Decoy", "TMScore", "Label", truth))
   }
   roc_scores.top <- roc_scores %>%
     group_by(Target, Score) %>%
@@ -133,7 +133,7 @@ plot_roclike <- function(rocresults){
     tprs[[which(methods==METHOD)]] <- data.frame(cut=perf@alpha.values[[1]], fpr=perf@x.values[[1]],tpr=perf@y.values[[1]], tp = pred@tp[[1]], n.pos.pred=pred@n.pos.pred[[1]],n.neg.pred=pred@n.neg.pred[[1]]) %>% mutate(Method=METHOD)
   }
 
-  tprs %>% bind_rows() %>% mutate(recall=.data$tp/.data$val_max) %>% mutate_if(is.numeric, round, 2) -> all
+  tprs %>% bind_rows() %>% mutate(recall=.data$tp/val_max) %>% mutate_if(is.numeric, round, 2) -> all
   all$Method <- factor(all$Method, levels=methods)
 
   ## Legend position

@@ -41,7 +41,7 @@ classify_models <- function(features, classifier, name="RFQAmodel", confidence =
 get_confidence <- function(results, predictor = RFQAmodel, confidence_cutoffs = c(0.5, 0.3, 0.1)){
   results_confidence <- results %>%
     group_by(.data$Target) %>%
-    mutate(.data$Confidence := ifelse(max({{predictor}}) > confidence_cutoffs[1] , "High",
+    mutate(Confidence = ifelse(max({{predictor}}) > confidence_cutoffs[1] , "High",
                                ifelse(max({{predictor}}) > confidence_cutoffs[2], "Medium",
                                       ifelse(max({{predictor}}) > confidence_cutoffs[3], "Low","Failed"))))
   return(results_confidence)
@@ -60,16 +60,21 @@ get_confidence <- function(results, predictor = RFQAmodel, confidence_cutoffs = 
 #'@importFrom dplyr mutate bind_rows filter group_by arrange slice summarise
 #' @importFrom rlang .data
 #'@export
-get_stats <- function(results, predictor = RFQAmodel, truth = TMScore, cutoff = 0.5, rev = FALSE){
-  if (rev){
-    results <- results %>% mutate(truth = -.data$truth)
+#'##### CLARE: need to fix this function: needs to take the LABEL value corresponding to the max(truth)
+#'or min(truth) (for rev)
+get_stats <- function(results, predictor = RFQAmodel, truth = "TMScore", cutoff = 0.5, rev = FALSE){
+  if ((!"Label" %in% names(results)) || relabel) {
+    results <- results %>% mutate(Label = RFQAmodelr::get_labels(!!as.name(truth), cutoff, rev))
+  }
+  if (! "Confidence" %in% names(results)){
+    results <- RFQAmodelr::get_confidence(results, predictor = {{predictor}})
   }
   stats <- results %>%
     bind_rows((results %>% mutate(Confidence = "All")),
               (results %>% filter(.data$Confidence %in% c("High","Medium")) %>% mutate(Confidence = "High.and.Medium")),
               results %>% filter(.data$Confidence != "Failed") %>% mutate(Confidence = "Predicted.Modelling.Success")) %>%
     group_by(.data$Confidence, .data$Target) %>%
-     mutate(Best := max({{truth}}) >= cutoff) %>%
+     mutate(Best := max( {{truth}} ) >= cutoff) %>%
      arrange( - {{predictor}} ) %>%
      slice(1:5) %>%
      mutate(Top5 = max( {{truth}} >= cutoff)) %>%
