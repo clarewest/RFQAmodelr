@@ -60,9 +60,7 @@ get_confidence <- function(results, predictor = RFQAmodel, confidence_cutoffs = 
 #'@importFrom dplyr mutate bind_rows filter group_by arrange slice summarise
 #' @importFrom rlang .data
 #'@export
-#'##### CLARE: need to fix this function: needs to take the LABEL value corresponding to the max(truth)
-#'or min(truth) (for rev)
-get_stats <- function(results, predictor = RFQAmodel, truth = "TMScore", cutoff = 0.5, rev = FALSE){
+get_stats <- function(results, predictor = RFQAmodel, relabel = FALSE, truth = "TMScore", cutoff = 0.5, rev = FALSE){
   if ((!"Label" %in% names(results)) || relabel) {
     results <- results %>% mutate(Label = RFQAmodelr::get_labels(!!as.name(truth), cutoff, rev))
   }
@@ -74,12 +72,12 @@ get_stats <- function(results, predictor = RFQAmodel, truth = "TMScore", cutoff 
               (results %>% filter(.data$Confidence %in% c("High","Medium")) %>% mutate(Confidence = "High.and.Medium")),
               results %>% filter(.data$Confidence != "Failed") %>% mutate(Confidence = "Predicted.Modelling.Success")) %>%
     group_by(.data$Confidence, .data$Target) %>%
-     mutate(Best := max( {{truth}} ) >= cutoff) %>%
+     mutate(Best = max(.data$Label)) %>%
      arrange( - {{predictor}} ) %>%
      slice(1:5) %>%
-     mutate(Top5 = max( {{truth}} >= cutoff)) %>%
+     mutate(Top5 = max(.data$Label)) %>%
      slice(1) %>%
-     summarise(Top5 = .data$Top5, Top1=sum( {{truth}} >= cutoff), Max = sum(.data$Best)) %>%
+     summarise(Top5 = .data$Top5, Top1=sum( .data$Label ), Max = sum(.data$Best)) %>%
      summarise(Top5 = sum(.data$Top5), Top1=sum(.data$Top1), Max = sum(.data$Max), Total = length(.data$Confidence)) %>%
      mutate(Precision.Top5 = .data$Top5/.data$Total, Precision.Top1 = .data$Top1/.data$Total)
   return(stats)

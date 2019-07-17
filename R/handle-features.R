@@ -111,6 +111,6 @@ get_labels <- function(truth = TMScore, cutoff=0.5, rev=FALSE){
   # greater than the cutoff (i.e. TMScore)
   # unless the rev flag is TRUE, in which case it should be
   # smaller than the cutoff (i.e. RMSD)
-  labels <- ifelse( (-1)^(1)*truth >= (-1)^(1)*cutoff , 1, 0 )
+  labels <- ifelse( (-1)^(rev)*truth >= (-1)^(rev)*cutoff , 1, 0 )
   return(labels)
 }
