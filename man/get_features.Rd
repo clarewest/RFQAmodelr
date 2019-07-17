@@ -4,10 +4,13 @@
 \alias{get_features}
 \title{Get the features}
 \usage{
-get_features(df, noglobal = FALSE)
+get_features(df, scaffold = FALSE, noglobal = FALSE)
 }
 \arguments{
 \item{df}{dataframe. Data frame containing the raw input data}
+
+\item{scaffold}{boolean. Indicate whether to use ScafFold features.
+Defaults to FALSE, use standard RFQAmodel features}
 
 \item{noglobal}{boolean. Indicate whether to leave out global features}
 }

@@ -5,7 +5,7 @@
 \title{Plot a ROC curve}
 \usage{
 plot_roc(resultsdf, featurelist, topmodel = FALSE, addhighconf = FALSE,
-  truth = TMScore, cutoff = 0.5)
+  truth = TMScore, cutoff = 0.5, rev = TRUE, relabel = TRUE)
 }
 \arguments{
 \item{resultsdf}{data frame}

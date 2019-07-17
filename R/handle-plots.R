@@ -46,9 +46,9 @@ plot_roc <- function(resultsdf, featurelist, topmodel = FALSE, addhighconf = FAL
   if (topmodel){
     roc_scores <- resultsdf %>%
       mutate(SAINT2=-SAINT2) %>%  # lower scores are better for SAINT2
-      select(Target, Decoy, TMScore, Label, featurelist) %>%
+      select(Target, Decoy, TMScore, Label, featurelist, {{truth}}) %>%
       group_by(Target) %>%
-      tidyr::gather(key="Score", value="value", -c("Target","Decoy", "TMScore", "Label"))
+      tidyr::gather(key="Score", value="value", -c("Target","Decoy", "TMScore", "Label", truth))
     }
   else{
     roc_scores <- resultsdf %>%

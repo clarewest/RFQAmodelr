@@ -4,8 +4,8 @@
 \alias{get_stats}
 \title{Get results statistics}
 \usage{
-get_stats(results, predictor = RFQAmodel, truth = TMScore,
-  cutoff = 0.5, rev = FALSE)
+get_stats(results, predictor = RFQAmodel, relabel = FALSE,
+  truth = "TMScore", cutoff = 0.5, rev = FALSE)
 }
 \arguments{
 \item{results}{dataframe}

@@ -32,6 +32,9 @@ get_ensemble <-function(df, colname, prefix=colname, rev=FALSE){
       mutate(!!paste0(prefix,"_Spr") := Max-Med) %>%
       rename_at(vars(Med, Max, Min), function(x) paste0(prefix,"_",x))
   }
+  if (colname == "MapAlign"){
+    df <- df %>% mutate(MA_LEN = max(MapLength))
+  }
   return(df %>% inner_join(ensemble, by=c("Target","Set")))
 }
 
@@ -41,16 +44,19 @@ get_ensemble <-function(df, colname, prefix=colname, rev=FALSE){
 #'
 #' @param df dataframe. Data frame containing the raw input data
 #' @param noglobal boolean. Indicate whether to leave out global features
+#' @param scaffold boolean. Indicate whether to use ScafFold features.
+#' Defaults to FALSE, use standard RFQAmodel features
 #' @return Returns a dataframe containing the features for RFQAmodel
 #' @importFrom magrittr "%>%"
 #' @importFrom dplyr select group_by mutate
 #' @importFrom rlang .data
 #' @export
-get_features <- function(df, noglobal=FALSE){
-  if (! noglobal){
+get_features <- function(df, scaffold = FALSE, noglobal=FALSE){
+  ## Standard RFQAmodel as used in the paper
+  if ( ! scaffold){
     df2 <- df %>%
-      select(-.data$SCOP_Class) %>%
       group_by(.data$Target, .data$Set) %>%
+      select(-.data$SCOP_Class) %>%
       RFQAmodelr::get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
       RFQAmodelr::get_ensemble(., "Contact", "Con", rev=TRUE) %>%
       RFQAmodelr::get_ensemble(., "PCons", "PC") %>%
@@ -60,38 +66,58 @@ get_features <- function(df, noglobal=FALSE){
       RFQAmodelr::get_ensemble(., "ProQ3D") %>%
       RFQAmodelr::get_ensemble(., "PCombC") %>%
       RFQAmodelr::get_ensemble(., "EigenTHREADER","ET") %>%
+      RFQAmodelr::get_ensemble(., "MapAlign","MA") %>%
       mutate(PPV_Max = max(PPV),
-             PPV_Num = (PPV * NumCon)) %>%
-      RFQAmodelr::get_ensemble(., "globalfRMSD") %>%
-      RFQAmodelr::get_ensemble(., "localfRMSD") %>%
-      RFQAmodelr::get_ensemble(., "sPCons") %>%
-      RFQAmodelr::get_ensemble(., "sProQ3D")
-  }
-  else{
-    df2 <- df %>%
-      select(-.data$SCOP_Class) %>%
-      select(-.data$PCons,
-             -.data$ProQ2D,
-             -.data$ProQRosCenD,
-             -.data$ProQRosFAD,
-             -.data$ProQ3D,
-             -.data$PCombC) %>%
-      group_by(Target, Set) %>%
-      mutate(sPCombC = ((0.3*.data$sPCons) + (0.6*.data$sProQ3D) + .data$PPV)/1.9) %>%
-      RFQAmodelr::get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
-      RFQAmodelr::get_ensemble(., "Contact", "Con", rev=TRUE) %>%
-      #         RFQAmodelr::get_ensemble(., "PCons", "PC") %>%
-      #          RFQAmodelr::get_ensemble(., "ProQ2D") %>%
-      #          RFQAmodelr::get_ensemble(., "ProQRosCenD","RosCen") %>%
-      #          RFQAmodelr::get_ensemble(., "ProQRosFAD","RosFA") %>%
-      #          RFQAmodelr::get_ensemble(., "ProQ3D") %>%
-      RFQAmodelr::get_ensemble(., "sPCombC") %>%
-      RFQAmodelr::get_ensemble(., "EigenTHREADER","ET") %>%
-      mutate(PPV_Max=max(PPV), PPV_Num=(PPV*NumCon)) %>%
-      RFQAmodelr::get_ensemble(., "globalfRMSD") %>%
-      RFQAmodelr::get_ensemble(., "localfRMSD") %>%
-      RFQAmodelr::get_ensemble(., "sPCons") %>%
-      RFQAmodelr::get_ensemble(., "sProQ3D")
+             PPV_Num = (PPV * NumCon))
+  }else{
+    if (! noglobal){
+      df2 <- df %>%
+        select(-.data$SCOP_Class) %>%
+        select(-.data$PCombC) %>%
+        group_by(.data$Target, .data$Set) %>%
+        mutate(sPCombC = ((0.3*.data$sPCons) + (0.6*.data$sProQ3D) + .data$PPV)/1.9) %>%
+        RFQAmodelr::get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
+        RFQAmodelr::get_ensemble(., "Contact", "Con", rev=TRUE) %>%
+        RFQAmodelr::get_ensemble(., "PCons", "PC") %>%
+        RFQAmodelr::get_ensemble(., "ProQ2D") %>%
+        RFQAmodelr::get_ensemble(., "ProQRosCenD","RosCen") %>%
+        RFQAmodelr::get_ensemble(., "ProQRosFAD","RosFA") %>%
+        RFQAmodelr::get_ensemble(., "ProQ3D") %>%
+        RFQAmodelr::get_ensemble(., "sPCombC") %>%
+        RFQAmodelr::get_ensemble(., "EigenTHREADER","ET") %>%
+        mutate(PPV_Max = max(PPV),
+               PPV_Num = (PPV * NumCon)) %>%
+        RFQAmodelr::get_ensemble(., "globalfRMSD") %>%
+        RFQAmodelr::get_ensemble(., "localfRMSD") %>%
+        RFQAmodelr::get_ensemble(., "sPCons") %>%
+        RFQAmodelr::get_ensemble(., "sProQ3D")
+    }
+    else{
+      df2 <- df %>%
+        select(-.data$SCOP_Class) %>%
+        select(-.data$PCons,
+               -.data$ProQ2D,
+               -.data$ProQRosCenD,
+               -.data$ProQRosFAD,
+               -.data$ProQ3D,
+               -.data$PCombC) %>%
+        group_by(Target, Set) %>%
+        mutate(sPCombC = ((0.3*.data$sPCons) + (0.6*.data$sProQ3D) + .data$PPV)/1.9) %>%
+        RFQAmodelr::get_ensemble(., "SAINT2", "S2", rev=TRUE) %>%
+        RFQAmodelr::get_ensemble(., "Contact", "Con", rev=TRUE) %>%
+        #         RFQAmodelr::get_ensemble(., "PCons", "PC") %>%
+        #          RFQAmodelr::get_ensemble(., "ProQ2D") %>%
+        #          RFQAmodelr::get_ensemble(., "ProQRosCenD","RosCen") %>%
+        #          RFQAmodelr::get_ensemble(., "ProQRosFAD","RosFA") %>%
+        #          RFQAmodelr::get_ensemble(., "ProQ3D") %>%
+        RFQAmodelr::get_ensemble(., "sPCombC") %>%
+        RFQAmodelr::get_ensemble(., "EigenTHREADER","ET") %>%
+        mutate(PPV_Max=max(PPV), PPV_Num=(PPV*NumCon)) %>%
+        RFQAmodelr::get_ensemble(., "globalfRMSD") %>%
+        RFQAmodelr::get_ensemble(., "localfRMSD") %>%
+        RFQAmodelr::get_ensemble(., "sPCons") %>%
+        RFQAmodelr::get_ensemble(., "sProQ3D")
+    }
   }
   return(df2)
 }

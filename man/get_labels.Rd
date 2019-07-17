@@ -4,7 +4,7 @@
 \alias{get_labels}
 \title{Get labels}
 \usage{
-get_labels(truth = TMScore, cutoff = 0.5)
+get_labels(truth = TMScore, cutoff = 0.5, rev = FALSE)
 }
 \arguments{
 \item{truth}{vector. Model quality compared to native (e.g. TMScore) for all
