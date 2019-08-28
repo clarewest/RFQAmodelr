@@ -4,7 +4,8 @@
 \alias{collect_input}
 \title{Collect input files}
 \usage{
-collect_input(directory = ".", detailsfile = "target_details.txt")
+collect_input(directory = ".", detailsfile = "target_details.txt",
+  targetnamelength = 6)
 }
 \arguments{
 \item{directory}{string. The directory containing files (default: working)}

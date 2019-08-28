@@ -55,12 +55,12 @@ collect_files <- function(directory="."){
 #' @importFrom dplyr mutate inner_join select
 #' @importFrom rlang .data
 #' @export
-collect_input <- function(directory=".", detailsfile="target_details.txt"){
+collect_input <- function(directory=".", detailsfile="target_details.txt", targetnamelength=6){
   t <- read.table(paste0(directory,"/",detailsfile), stringsAsFactors=FALSE, header=TRUE)
   featurefiles <- RFQAmodelr::collect_files(directory)
   df <- Reduce(function(...) merge(..., by='Decoy', all.x=TRUE), featurefiles) %>%
     mutate(PPV=replace(.data$PPV, is.na(.data$PPV), 0)) %>%
-    mutate(Target = substr(.data$Decoy, 1, 6),
+    mutate(Target = substr(.data$Decoy, 1, targetnamelength),
            PPV=.data$PPV/100,
            PCombC=((0.3*.data$PCons) + (0.6*.data$ProQ3D) + .data$PPV)/1.9) %>%
     inner_join(t, by="Target") %>%
