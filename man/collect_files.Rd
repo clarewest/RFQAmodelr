@@ -4,7 +4,10 @@
 \alias{collect_files}
 \title{Collect files}
 \usage{
-collect_files(directory = ".")
+collect_files(directory = ".", scaffold = FALSE)
+}
+\arguments{
+\item{scaffold}{boolean. Collect extra features required for RFQAmodel ScafFold}
 }
 \description{
 Read in all the specified files containing raw feature information

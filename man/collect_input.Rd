@@ -5,7 +5,7 @@
 \title{Collect input files}
 \usage{
 collect_input(directory = ".", detailsfile = "target_details.txt",
-  targetnamelength = 6)
+  scaffold = FALSE, targetnamelength = 6)
 }
 \arguments{
 \item{directory}{string. The directory containing files (default: working)}
