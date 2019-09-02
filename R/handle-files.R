@@ -80,6 +80,8 @@ collect_input <- function(directory=".", detailsfile="target_details.txt", scaff
              .data$Target,
              .data$Decoy,
              .data$EigenTHREADER,
+             .data$MapAlign,
+             .data$MapLength,
              .data$Contact,
              .data$SAINT2,
              .data$PPV,
