@@ -3,9 +3,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-RFQAmodelr is a package to simplify using RFQAmodel to classify predicted 
+RFQAmodelr is a package to simplify using [RFQAmodel](https://www.biorxiv.org/content/10.1101/654293v1) to classify predicted 
 protein structures as correct or incorrect. 
-
 
 ## Installation
 
@@ -36,7 +35,7 @@ input <- read.table("https://raw.githubusercontent.com/clarewest/RFQAmodel/maste
 features <- RFQAmodelr::get_features(input)
 
 ## Load classifier
-load("RFQAmodel_classifier.Rda")
+data(RFQAmodelr)
 
 ## Classify models
 classifications <- RFQAmodelr::classify_models(features, classifier=RFQAmodel)
@@ -46,8 +45,8 @@ classifications <- RFQAmodelr::classify_models(features, classifier=RFQAmodel)
 ## Add confidence categories
 confidence <- RFQAmodelr::get_confidence(classifications)
 # Optional arguments:
-# predictior = "RFQAmodel"
-# - column to use as the predictior
+# predictor = "RFQAmodel"
+# - column to use as the predictor
 # confidence_cutoffs = c(0.5, 0.3, 0.1)
 # - custom confidence cutoff levels for High, Medium and Low confidence
 ```
