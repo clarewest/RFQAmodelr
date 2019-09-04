@@ -71,15 +71,16 @@ get_stats <- function(results, predictor = RFQAmodel, relabel = FALSE, truth = "
     bind_rows((results %>% mutate(Confidence = "All")),
               (results %>% filter(.data$Confidence %in% c("High","Medium")) %>% mutate(Confidence = "High.and.Medium")),
               results %>% filter(.data$Confidence != "Failed") %>% mutate(Confidence = "Predicted.Modelling.Success")) %>%
-    group_by(.data$Confidence, .data$Target) %>%
-     mutate(Best = max(.data$Label)) %>%
+    group_by(.data$Set, .data$Confidence, .data$Target) %>%
+     mutate(Best = max(.data$TMScore) >= 0.5) %>%
      arrange( - {{predictor}} ) %>%
      slice(1:5) %>%
      mutate(Top5 = max(.data$Label)) %>%
      slice(1) %>%
      summarise(Top5 = .data$Top5, Top1=sum( .data$Label ), Max = sum(.data$Best)) %>%
      summarise(Top5 = sum(.data$Top5), Top1=sum(.data$Top1), Max = sum(.data$Max), Total = length(.data$Confidence)) %>%
-     mutate(Precision.Top5 = .data$Top5/.data$Total, Precision.Top1 = .data$Top1/.data$Total)
+     mutate(Precision.Top5 = (.data$Top5/.data$Total)*100, Precision.Top1 = (.data$Top1/.data$Total)*100) %>%
+    select(Set, Confidence, Total, Max, Top1, Precision.Top1, Top5, Precision.Top5)
   return(stats)
 }
 
