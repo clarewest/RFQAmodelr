@@ -40,7 +40,7 @@ classify_models <- function(features, classifier, name="RFQAmodel", confidence =
 #' @export
 get_confidence <- function(results, predictor = RFQAmodel, confidence_cutoffs = c(0.5, 0.3, 0.1)){
   results_confidence <- results %>%
-    group_by(.data$Target) %>%
+    group_by(.data$Set, .data$Target) %>%
     mutate(Confidence = ifelse(max({{predictor}}) > confidence_cutoffs[1] , "High",
                                ifelse(max({{predictor}}) > confidence_cutoffs[2], "Medium",
                                       ifelse(max({{predictor}}) > confidence_cutoffs[3], "Low","Failed"))))
